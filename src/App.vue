@@ -102,15 +102,33 @@ const formatTime = (sec) => {
 
 // ---------- 从后端加载歌单 ----------
 async function loadList() {
+  // 1) 优先试后端（本地/Electron 有数据库时）
   try {
     const res = await fetch(API + '/api/songs')
-    songList.value = await res.json()
-    if (songList.value.length && (!currentSong.value.id || !songList.value.find(s => s.id === currentSong.value.id))) {
-      currentSong.value = songList.value[0]
-      loadSong(currentSong.value)
+    if (res.ok) {
+      const list = await res.json()
+      if (list.length) {
+        songList.value = list
+        if (!currentSong.value.id || !list.find(s => s.id === currentSong.value.id)) {
+          currentSong.value = list[0]
+          loadSong(list[0])
+        }
+        return
+      }
     }
+    throw new Error('no backend')
   } catch (e) {
-    console.error('加载歌单失败', e)
+    // 2) 后端不可用（线上静态站），读 public/songs.json
+    try {
+      const res = await fetch('/songs.json')
+      songList.value = await res.json()
+      if (songList.value.length) {
+        currentSong.value = songList.value[0]
+        loadSong(songList.value[0])
+      }
+    } catch (e2) {
+      console.error('加载歌单失败', e2)
+    }
   }
 }
 

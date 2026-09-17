@@ -1,0 +1,13 @@
+[
+  { "id": 1,  "name": "稻香",             "singer": "周杰伦",   "src": "/music/01.flac", "cover": "" },
+  { "id": 2,  "name": "给我一首歌的时间", "singer": "周杰伦",   "src": "/music/02.flac", "cover": "" },
+  { "id": 3,  "name": "花海",             "singer": "周杰伦",   "src": "/music/03.flac", "cover": "" },
+  { "id": 4,  "name": "兰亭序",           "singer": "周杰伦",   "src": "/music/04.flac", "cover": "" },
+  { "id": 5,  "name": "龙战骑士",         "singer": "周杰伦",   "src": "/music/05.flac", "cover": "" },
+  { "id": 6,  "name": "魔术先生",         "singer": "周杰伦",   "src": "/music/06.flac", "cover": "" },
+  { "id": 7,  "name": "乔克叔叔",         "singer": "周杰伦",   "src": "/music/07.flac", "cover": "" },
+  { "id": 8,  "name": "时光机",           "singer": "周杰伦",   "src": "/music/08.flac", "cover": "" },
+  { "id": 9,  "name": "说好的幸福呢",     "singer": "周杰伦",   "src": "/music/09.flac", "cover": "" },
+  { "id": 10, "name": "蛇舞",             "singer": "周杰伦/梁心颐", "src": "/music/10.flac", "cover": "" },
+  { "id": 11, "name": "流浪诗人",         "singer": "周杰伦/杨瑞代", "src": "/music/11.flac", "cover": "" }
+]
