@@ -1,0 +1,10 @@
+node_modules/
+dist/
+server/uploads/
+server/data/
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+.DS_Store
+Thumbs.db

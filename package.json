@@ -1,0 +1,49 @@
+{
+  "name": "my-music",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "server": "node server/index.js",
+    "build": "vite build",
+    "build:electron": "vite build --mode electron",
+    "dev:electron": "electron .",
+    "dist": "npm run build:electron && electron-builder"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.11.1",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "howler": "^2.2.4",
+    "multer": "^2.4.0",
+    "vue": "^3.5.42"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.8",
+    "electron": "^41.7.1",
+    "electron-builder": "^26.15.3",
+    "vite": "^8.3.0"
+  },
+  "build": {
+    "appId": "com.mymusic.app",
+    "productName": "我的音乐",
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "server/**/*",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      { "from": "server", "to": "server" }
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
