@@ -19,8 +19,7 @@
       <div v-if="!lyrics.length" class="lyric-empty">♪ 歌词加载中...</div>
       <div v-for="(line, i) in lyrics" :key="i"
            class="lyric-line"
-           :class="{ active: i === currentLyric }"
-           :ref="el => { if (i === currentLyric) activeLineEl = el }">
+           :class="{ active: i === currentLyric }">
         {{ line.text }}
       </div>
     </div>
@@ -102,7 +101,6 @@ const volume = ref(70)
 // 歌词
 const lyrics = ref([])
 const currentLyric = ref(-1)
-let activeLineEl = null
 const lyricsBox = ref(null)
 
 // 解析 LRC
@@ -149,9 +147,8 @@ function updateLyric(t) {
   if (idx !== currentLyric.value) {
     currentLyric.value = idx
     nextTick(() => {
-      if (activeLineEl && lyricsBox.value) {
-        activeLineEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }
+      const el = lyricsBox.value?.querySelector('.lyric-line.active')
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     })
   }
 }
