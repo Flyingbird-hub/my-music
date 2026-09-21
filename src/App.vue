@@ -14,6 +14,17 @@
       </div>
     </div>
 
+    <!-- 歌词面板 -->
+    <div class="lyrics-box" ref="lyricsBox">
+      <div v-if="!lyrics.length" class="lyric-empty">♪ 歌词加载中...</div>
+      <div v-for="(line, i) in lyrics" :key="i"
+           class="lyric-line"
+           :class="{ active: i === currentLyric }"
+           :ref="el => { if (i === currentLyric) activeLineEl = el }">
+        {{ line.text }}
+      </div>
+    </div>
+
     <!-- 进度条 -->
     <div class="progress">
       <input type="range" min="0" :max="duration || 0" step="0.1"
@@ -75,10 +86,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import { Howl } from 'howler'
 
-// 开发/网页版走 Vite 代理（空字符串）；Electron 打包版用 http://localhost:3001
 const API = import.meta.env.VITE_API_BASE || ''
 
 const songList = ref([])
@@ -88,6 +98,63 @@ const isPlaying = ref(false)
 const currentTime = ref(0)
 const duration = ref(0)
 const volume = ref(70)
+
+// 歌词
+const lyrics = ref([])
+const currentLyric = ref(-1)
+let activeLineEl = null
+const lyricsBox = ref(null)
+
+// 解析 LRC
+function parseLrc(text) {
+  const out = []
+  const reg = /\[(\d{2}):(\d{2})(?:[.:](\d{1,3}))?\]/g
+  for (const raw of text.split('\n')) {
+    let m
+    reg.lastIndex = 0
+    while ((m = reg.exec(raw)) !== null) {
+      const min = +m[1], sec = +m[2], ms = +(m[3] || 0)
+      const time = min * 60 + sec + (ms < 100 ? ms * 10 : ms) / 1000
+      const txt = raw.replace(reg, '').trim()
+      if (txt) out.push({ time, text: txt })
+    }
+  }
+  return out.sort((a, b) => a.time - b.time)
+}
+
+function lyricUrlOf(song) {
+  if (!song.src) return ''
+  const file = song.src.split('/').pop() || ''
+  const name = file.replace(/\.[^.]+$/, '')
+  return '/lyrics/' + name + '.lrc'
+}
+
+async function loadLyrics(song) {
+  lyrics.value = []
+  currentLyric.value = -1
+  try {
+    const res = await fetch(lyricUrlOf(song))
+    if (!res.ok) return
+    lyrics.value = parseLrc(await res.text())
+  } catch (e) {}
+}
+
+function updateLyric(t) {
+  if (!lyrics.value.length) return
+  let idx = -1
+  for (let i = 0; i < lyrics.value.length; i++) {
+    if (t >= lyrics.value[i].time) idx = i
+    else break
+  }
+  if (idx !== currentLyric.value) {
+    currentLyric.value = idx
+    nextTick(() => {
+      if (activeLineEl && lyricsBox.value) {
+        activeLineEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    })
+  }
+}
 
 // 上传表单
 const showUpload = ref(false)
@@ -135,6 +202,7 @@ async function loadList() {
 const loadSong = (song) => {
   if (sound) sound.unload()
   currentTime.value = 0; duration.value = 0
+  loadLyrics(song)
   sound = new Howl({
     src: [API + song.src], volume: volume.value / 100, html5: true,
     onload: () => { duration.value = sound.duration() },
@@ -148,6 +216,7 @@ const loadSong = (song) => {
 const tick = () => {
   if (!sound || !isPlaying.value) return
   currentTime.value = sound.seek()
+  updateLyric(currentTime.value)
   requestAnimationFrame(tick)
 }
 
@@ -166,6 +235,7 @@ const onSeek = (e) => {
   if (!sound) return
   const val = Number(e.target.value)
   sound.seek(val); currentTime.value = val
+  updateLyric(val)
 }
 
 const setVolume = () => { if (sound) sound.volume(volume.value / 100) }
@@ -245,6 +315,26 @@ onUnmounted(() => { if (sound) sound.unload() })
 .meta { min-width: 0; }
 .song-name { font-size: 20px; font-weight: 600; color: #fff; margin: 0 0 6px; }
 .singer { font-size: 14px; color: #c4b5fd; margin: 0; }
+
+/* 歌词面板 */
+.lyrics-box {
+  height: 160px; overflow-y: auto; padding: 10px 6px; margin-bottom: 18px;
+  border-radius: 12px; background: rgba(0,0,0,0.25);
+  scroll-behavior: smooth;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 20%, #000 80%, transparent);
+          mask-image: linear-gradient(to bottom, transparent, #000 20%, #000 80%, transparent);
+}
+.lyrics-box::-webkit-scrollbar { width: 0; }
+.lyric-empty { text-align: center; color: #6b7280; font-size: 13px; line-height: 140px; }
+.lyric-line {
+  text-align: center; font-size: 13px; color: #9ca3af;
+  padding: 6px 8px; transition: all .3s ease; opacity: .7;
+}
+.lyric-line.active {
+  color: #f472b6; font-size: 17px; font-weight: 600; opacity: 1;
+  transform: scale(1.1); text-shadow: 0 0 12px rgba(244,114,182,.5);
+}
+
 .progress { margin-bottom: 18px; }
 .progress input { width: 100%; accent-color: #a78bfa; }
 .time-text { font-size: 12px; color: #a5b4fc; text-align: right; margin-top: 4px; }
